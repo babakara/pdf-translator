@@ -21,6 +21,7 @@ model_name = "Helsinki-NLP/opus-mt-en-zh"
 
 pdffile = "123.pdf"
 outputs = "./outputs/"
+temp = "./temp/"
 class TranslateApi:
     """Translator API class.
 
@@ -50,6 +51,7 @@ class TranslateApi:
 
         self.__load_models() # 加载模型
         self.out_put_name = outputs
+        self.temp_dir_name = temp
         self.translate_pdf("./translate_pdf/"+filename)
         
     def translate_pdf(self, input_pdf):
@@ -98,7 +100,7 @@ class TranslateApi:
         pdf_files = []
         reached_references = False
         for i, image in tqdm(enumerate(pdf_images)):
-            output_path = output_dir / f"{i:03}.pdf"
+            output_path = output_dir + f"{i:03}.pdf"
             if not reached_references:
                 img, original_img, reached_references = self.__translate_one_page(
                     image=image,
