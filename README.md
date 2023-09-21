@@ -22,3 +22,6 @@ Thanks to [PDF Translator EN-JA](https://github.com/discus0434/pdf-translator)
 4. pip install -r requirements.txt
 5. python main.py
 
+如果要更换示例的PDF文件，替换"translate_pdf/123.pdf"。
+生成的中间文件在"temp"文件夹下
+合并结果PDF在"outputs\translated.pdf"

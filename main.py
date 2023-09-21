@@ -15,6 +15,9 @@ from tqdm import tqdm
 from transformers import MarianMTModel, MarianTokenizer
 from utils import fw_fill
 
+model_name = "Helsinki-NLP/opus-mt-en-zh"
+pdffile = "123.pdf"
+outputs = "./outputs"
 class TranslateApi:
     """Translator API class.
 
@@ -45,9 +48,8 @@ class TranslateApi:
         self.__load_models() # 加载模型
         self.temp_dir = tempfile.TemporaryDirectory(dir='temp')
         self.temp_dir_name = Path(self.temp_dir.name)
-        # print(self.temp_dir_name)
-        self.clear_temp_dir()
-        self.translate_pdf("translate_pdf/"+filename)
+        self.out_put_name = outputs
+        self.translate_pdf("./translate_pdf/"+filename)
         
     def translate_pdf(self, input_pdf):
         """API endpoint for translating PDF files.
@@ -68,8 +70,6 @@ class TranslateApi:
     def clear_temp_dir(self):
         """API endpoint for clearing the temporary directory."""
         self.temp_dir.cleanup()
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.temp_dir_name = Path(self.temp_dir.name)
         return {"message": "temp dir cleared"}
 
     def _translate_pdf(self, pdf_path, output_dir: Path) -> None:
@@ -141,7 +141,6 @@ class TranslateApi:
         self.layout_model = PPStructure(table=False, ocr=False, lang="en")
         self.ocr_model = PaddleOCR(ocr=True, lang="en", ocr_version="PP-OCRv3")
 
-        model_name = "Helsinki-NLP/opus-mt-en-zh"
         self.translate_model = MarianMTModel.from_pretrained(model_name).to(
             "cuda"
         )
@@ -320,11 +319,11 @@ class TranslateApi:
 
         for pdf_file in sorted(pdf_files):
             pdf_merger.append(pdf_file)
-        pdf_merger.write(self.temp_dir_name / "translated.pdf")
-
+        pdf_merger.write(self.out_put_name + "translated.pdf")
+        self.clear_temp_dir()
 
 if __name__ == "__main__":
     translate_api = TranslateApi()
-    translate_api.run("123.pdf")
+    translate_api.run(pdffile)
 
     
