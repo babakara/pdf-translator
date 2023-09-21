@@ -31,4 +31,4 @@ RUN pip install --no-cache-dir opencv-python-headless \
     torchaudio==0.12.1+cu113 \
     -f https://download.pytorch.org/whl/cu113/torch_stable.html
 
-RUN wget https://github.com/adobe-fonts/source-han-serif/raw/release/OTF/Japanese/SourceHanSerif-Light.otf -P /home/
+RUN wget https://github.com/adobe-fonts/source-han-serif/blob/release/OTF/SimplifiedChinese/SourceHanSerifSC-Light.otf -P /home/

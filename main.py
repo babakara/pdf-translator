@@ -7,9 +7,6 @@ from typing import List, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import PyPDF2
-import uvicorn
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import FileResponse
 from paddleocr import PaddleOCR, PPStructure
 from pdf2image import convert_from_bytes, convert_from_path
 from PIL import Image, ImageDraw, ImageFont
@@ -17,12 +14,6 @@ from pydantic import BaseModel, Field
 from tqdm import tqdm
 from transformers import MarianMTModel, MarianTokenizer
 from utils import fw_fill
-
-
-class InputPdf(BaseModel):
-    """Input PDF file."""
-    input_pdf: UploadFile = Field(..., title="Input PDF file")
-
 
 class TranslateApi:
     """Translator API class.
@@ -49,29 +40,16 @@ class TranslateApi:
     DPI = 300
     FONT_SIZE = 32
 
-    def __init__(self):
-        self.app = FastAPI()
-        self.app.add_api_route(
-            "/translate_pdf/",
-            self.translate_pdf,
-            methods=["POST"],
-            response_class=FileResponse,
-        )
-        self.app.add_api_route(
-            "/clear_temp_dir/",
-            self.clear_temp_dir,
-            methods=["GET"],
-        )
-
-        self.__load_models()
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.temp_dir_name = Path(self.temp_dir.name)
-
     def run(self):
-        """Run the API server"""
-        uvicorn.run(self.app, host="0.0.0.0", port=8765)
 
-    async def translate_pdf(self, input_pdf: UploadFile = File(...)) -> FileResponse:
+        self.__load_models() # 加载模型
+        self.temp_dir = tempfile.TemporaryDirectory(dir='temp')
+        self.temp_dir_name = Path(self.temp_dir.name)
+        
+        self.translate_pdf('translate_pdf\Optimal path planning of mobile robots A review.pdf')
+        # self.clear_temp_dir()
+        
+    def translate_pdf(self, input_pdf):
         """API endpoint for translating PDF files.
 
         Parameters
@@ -84,21 +62,17 @@ class TranslateApi:
         FileResponse
             Translated PDF file
         """
-        input_pdf_data = await input_pdf.read()
-        self._translate_pdf(input_pdf_data, self.temp_dir_name)
 
-        return FileResponse(
-            self.temp_dir_name / "translated.pdf", media_type="application/pdf"
-        )
+        self._translate_pdf(input_pdf, self.temp_dir_name)
 
-    async def clear_temp_dir(self):
+    def clear_temp_dir(self):
         """API endpoint for clearing the temporary directory."""
         self.temp_dir.cleanup()
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_dir_name = Path(self.temp_dir.name)
         return {"message": "temp dir cleared"}
 
-    def _translate_pdf(self, pdf_path_or_bytes: Union[Path, bytes], output_dir: Path) -> None:
+    def _translate_pdf(self, pdf_path, output_dir: Path) -> None:
         """Backend function for translating PDF files.
 
         Translation is performed in the following steps:
@@ -119,10 +93,11 @@ class TranslateApi:
         output_dir: Path
             Path to the output directory
         """
-        if isinstance(pdf_path_or_bytes, Path):
-            pdf_images = convert_from_path(pdf_path_or_bytes, dpi=self.DPI)
+        pdf_bytes = open(pdf_path, 'rb').read()
+        if isinstance(pdf_path, Path):
+            pdf_images = convert_from_path(pdf_bytes, dpi=self.DPI)
         else:
-            pdf_images = convert_from_bytes(pdf_path_or_bytes, dpi=self.DPI)
+            pdf_images = convert_from_bytes(pdf_bytes, dpi=self.DPI)
 
         pdf_files = []
         reached_references = False
@@ -159,17 +134,21 @@ class TranslateApi:
         Load the layout model, OCR model, translation model and font.
         """
         self.font = ImageFont.truetype(
-            "/home/SourceHanSerif-Light.otf",
+            "Font\SourceHanSerifSC-Light.otf",
             size=self.FONT_SIZE,
         )
 
         self.layout_model = PPStructure(table=False, ocr=False, lang="en")
         self.ocr_model = PaddleOCR(ocr=True, lang="en", ocr_version="PP-OCRv3")
 
-        self.translate_model = MarianMTModel.from_pretrained("staka/fugumt-en-ja").to(
+# translated = model.generate(**tokenizer(src_text, return_tensors="pt", padding=True))
+# res = [tokenizer.decode(t, skip_special_tokens=True) for t in translated]
+# print(res)
+        model_name = "Helsinki-NLP/opus-mt-en-zh"
+        self.translate_model = MarianMTModel.from_pretrained(model_name).to(
             "cuda"
         )
-        self.translate_tokenizer = MarianTokenizer.from_pretrained("staka/fugumt-en-ja")
+        self.translate_tokenizer = MarianTokenizer.from_pretrained(model_name)
 
     def __translate_one_page(
         self,
@@ -286,9 +265,8 @@ class TranslateApi:
             )
             outputs = self.translate_model.generate(inputs, max_length=512)
             res = self.translate_tokenizer.decode(outputs[0], skip_special_tokens=True)
-
             # skip weird translations
-            if res.startswith("「この版"):
+            if res.startswith("这版"):
                 continue
 
             translated_texts.append(res)
@@ -355,3 +333,5 @@ class TranslateApi:
 if __name__ == "__main__":
     translate_api = TranslateApi()
     translate_api.run()
+
+    
