@@ -2,7 +2,7 @@
 *.pyc
 __pycache__
 /venv
-*.pdf
+/temp/*.pdf
 
 *.otf
 *.ttf
