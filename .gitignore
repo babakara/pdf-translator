@@ -1,8 +1,6 @@
-.DS_Store
+
 *.pyc
 __pycache__
 /venv
 /temp/*.pdf
 
-*.otf
-*.ttf
