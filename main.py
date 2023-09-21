@@ -1,6 +1,5 @@
 import copy
 import re
-import tempfile
 from pathlib import Path
 from typing import List, Tuple, Union
 
@@ -10,14 +9,18 @@ import PyPDF2
 from paddleocr import PaddleOCR, PPStructure
 from pdf2image import convert_from_bytes, convert_from_path
 from PIL import Image, ImageDraw, ImageFont
-from pydantic import BaseModel, Field
 from tqdm import tqdm
 from transformers import MarianMTModel, MarianTokenizer
 from utils import fw_fill
 
+# hugging face 英译中模型
 model_name = "Helsinki-NLP/opus-mt-en-zh"
+
+# hugging face 中译英模型
+# model_name = "Helsinki-NLP/opus-mt-en-zh"
+
 pdffile = "123.pdf"
-outputs = "./outputs"
+outputs = "./outputs/"
 class TranslateApi:
     """Translator API class.
 
@@ -46,8 +49,6 @@ class TranslateApi:
     def run(self, filename: str):
 
         self.__load_models() # 加载模型
-        self.temp_dir = tempfile.TemporaryDirectory(dir='temp')
-        self.temp_dir_name = Path(self.temp_dir.name)
         self.out_put_name = outputs
         self.translate_pdf("./translate_pdf/"+filename)
         
@@ -66,11 +67,6 @@ class TranslateApi:
         """
 
         self._translate_pdf(input_pdf, self.temp_dir_name)
-
-    def clear_temp_dir(self):
-        """API endpoint for clearing the temporary directory."""
-        self.temp_dir.cleanup()
-        return {"message": "temp dir cleared"}
 
     def _translate_pdf(self, pdf_path, output_dir: Path) -> None:
         """Backend function for translating PDF files.
@@ -252,7 +248,7 @@ class TranslateApi:
         str
             Translated text.
         """
-        texts = self.__split_text(text, 400)
+        texts = self.__split_text(text, 448)
 
         translated_texts = []
         for i, t in enumerate(texts):
@@ -320,7 +316,6 @@ class TranslateApi:
         for pdf_file in sorted(pdf_files):
             pdf_merger.append(pdf_file)
         pdf_merger.write(self.out_put_name + "translated.pdf")
-        self.clear_temp_dir()
 
 if __name__ == "__main__":
     translate_api = TranslateApi()
