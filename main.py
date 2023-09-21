@@ -40,14 +40,14 @@ class TranslateApi:
     DPI = 300
     FONT_SIZE = 32
 
-    def run(self):
+    def run(self, filename: str):
 
         self.__load_models() # 加载模型
         self.temp_dir = tempfile.TemporaryDirectory(dir='temp')
         self.temp_dir_name = Path(self.temp_dir.name)
-        
-        self.translate_pdf('translate_pdf\Optimal path planning of mobile robots A review.pdf')
-        # self.clear_temp_dir()
+        # print(self.temp_dir_name)
+        self.clear_temp_dir()
+        self.translate_pdf("translate_pdf/"+filename)
         
     def translate_pdf(self, input_pdf):
         """API endpoint for translating PDF files.
@@ -141,9 +141,6 @@ class TranslateApi:
         self.layout_model = PPStructure(table=False, ocr=False, lang="en")
         self.ocr_model = PaddleOCR(ocr=True, lang="en", ocr_version="PP-OCRv3")
 
-# translated = model.generate(**tokenizer(src_text, return_tensors="pt", padding=True))
-# res = [tokenizer.decode(t, skip_special_tokens=True) for t in translated]
-# print(res)
         model_name = "Helsinki-NLP/opus-mt-en-zh"
         self.translate_model = MarianMTModel.from_pretrained(model_name).to(
             "cuda"
@@ -256,7 +253,7 @@ class TranslateApi:
         str
             Translated text.
         """
-        texts = self.__split_text(text, 448)
+        texts = self.__split_text(text, 400)
 
         translated_texts = []
         for i, t in enumerate(texts):
@@ -265,10 +262,6 @@ class TranslateApi:
             )
             outputs = self.translate_model.generate(inputs, max_length=512)
             res = self.translate_tokenizer.decode(outputs[0], skip_special_tokens=True)
-            # skip weird translations
-            if res.startswith("这版"):
-                continue
-
             translated_texts.append(res)
         print(translated_texts)
         return "".join(translated_texts)
@@ -332,6 +325,6 @@ class TranslateApi:
 
 if __name__ == "__main__":
     translate_api = TranslateApi()
-    translate_api.run()
+    translate_api.run("123.pdf")
 
     
