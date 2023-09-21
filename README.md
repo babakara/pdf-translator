@@ -1,4 +1,4 @@
-# PDF Translator EN-ZH
+# PDF英文转中文
 
 生成的PDF是中英对照的。
 
