@@ -182,19 +182,19 @@ class TranslateApi:
                     translated_text = self.__translate(text)
 
                     # if almost all characters in translated text are not japanese characters, skip
-                    if len(
-                        re.findall(
-                            r"[^\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u3400-\u4DBF]",
-                            translated_text,
-                        )
-                    ) > 0.8 * len(translated_text):
-                        print("skipped")
-                        continue
+                    # if len(
+                    #     re.findall(
+                    #         r"[^\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u3400-\u4DBF]",
+                    #         translated_text,
+                    #     )
+                    # ) > 0.8 * len(translated_text):
+                    #     print("skipped")
+                    #     continue
 
                     # if text is too short, skip
-                    if len(translated_text) < 20:
-                        print("skipped")
-                        continue
+                    # if len(translated_text) < 20:
+                    #     print("skipped")
+                    #     continue
 
                     processed_text = fw_fill(
                         translated_text,
